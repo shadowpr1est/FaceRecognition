@@ -58,7 +58,7 @@ def recognize_faces_in_image(image_path, known_encodings, known_names):
 
 if __name__ == "__main__":
     known_encodings, known_names = load_known_faces()
-    results = recognize_faces_in_image("test-image.jpg", known_encodings, known_names)
+    results = recognize_faces_in_image("test-image3.jpg", known_encodings, known_names)
     print("Распознанные лица:", results)
 
 

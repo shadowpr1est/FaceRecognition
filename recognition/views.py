@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from face_recognition_core import load_known_faces, recognize_faces
 from .models import Attendance
+from .pdf_generator import generate_pdf_report
 from django.conf import settings
 from django.utils import timezone
 import os, cv2
@@ -27,6 +28,7 @@ if not KNOWN_ENCODINGS:
 def upload_view(request):
     recognized_names = []
     saved_photo_url = None
+    pdf_url = None
 
     if request.method == 'POST':
         image = request.FILES['image']
@@ -43,8 +45,6 @@ def upload_view(request):
             for chunk in image.chunks():
                 f.write(chunk)
 
-        # downscale_image(full_path)
-
         global KNOWN_ENCODINGS, KNOWN_NAMES
         if not KNOWN_ENCODINGS:
             KNOWN_ENCODINGS, KNOWN_NAMES = load_known_faces('known_faces')
@@ -59,7 +59,15 @@ def upload_view(request):
 
         saved_photo_url = os.path.join(settings.MEDIA_URL, folder, filename)
 
+        # PDF report
+        pdf_filename = f"report_{timestamp}.pdf"
+        pdf_path = os.path.join(settings.MEDIA_ROOT, 'reports', pdf_filename)
+        generate_pdf_report(recognized_names, pdf_path)
+        pdf_url = os.path.join(settings.MEDIA_URL, 'reports', pdf_filename)
+
     return render(request, 'recognition/upload.html', {
         'recognized_names': recognized_names,
-        'photo_url': saved_photo_url
+        'photo_url': saved_photo_url,
+        'pdf_url': pdf_url,
     })
+
