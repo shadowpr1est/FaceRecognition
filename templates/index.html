@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Recognition Web</title>
+</head>
+<body>
+  <h1>Upload a photo</h1>
+  <form method="POST" enctype="multipart/form-data">
+    <input type="file" name="image">
+    <button type="submit">Upload & Recognize</button>
+  </form>
+
+  {% if filename %}
+    <h2>Uploaded image:</h2>
+    <img src="{{ url_for('static', filename='uploads/' + filename) }}" width="400">
+  {% endif %}
+
+  <h2>Attendance:</h2>
+  <ul>
+    {% for name, time in names %}
+      <li>{{ name }} — {{ time }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

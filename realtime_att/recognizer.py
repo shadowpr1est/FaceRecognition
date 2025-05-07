@@ -18,13 +18,13 @@ class FaceRecognizer:
                     self.known_encodings.append(encodings[0])
                     self.known_names.append(os.path.splitext(filename)[0])
 
-    def recognize(self, frame):
+    def recognize(self, frame, tolerance=0.5):
         names = []
         face_locations = face_recognition.face_locations(frame)
         encodings = face_recognition.face_encodings(frame, face_locations)
 
         for encoding in encodings:
-            matches = face_recognition.compare_faces(self.known_encodings, encoding, tolerance=0.5)
+            matches = face_recognition.compare_faces(self.known_encodings, encoding, tolerance=tolerance)
             face_distances = face_recognition.face_distance(self.known_encodings, encoding)
             best_match = np.argmin(face_distances)
             if matches[best_match]:
