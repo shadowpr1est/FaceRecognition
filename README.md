@@ -95,20 +95,20 @@ FaceRecognition/
 
 # Security
 
-All forms are CSRF-protected.
+* All forms are CSRF-protected.
 
-Images and data are stored locally on the server, not in the cloud.
+* Images and data are stored locally on the server, not in the cloud.
 
-Access to PDF reports can be restricted via login (not implemented yet).
+* Access to PDF reports can be restricted via login (not implemented yet).
 
 
 # Future Improvements
 
-Teacher dashboard for managing attendance history
+* Teacher dashboard for managing attendance history
 
-Responsive mobile interface
+* Responsive mobile interface
 
-Emotion detection or face mask recognition
+* Emotion detection or face mask recognition
 
-Cloud storage and analytics integration
+* Cloud storage and analytics integration
 
