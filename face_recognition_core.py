@@ -19,21 +19,21 @@ def load_known_faces(known_faces_dir='known_faces'):
     return known_encodings, known_names
 
 
-def recognize_faces(image_path, known_encodings, known_names):
-    rgb_image = face_recognition.load_image_file(image_path)
+import face_recognition
 
-    face_locations = face_recognition.face_locations(rgb_image)
-    face_encodings = face_recognition.face_encodings(rgb_image, face_locations)
+
+def recognize_faces(image, known_encodings, known_names):
+    face_locations = face_recognition.face_locations(image)
+    face_encodings = face_recognition.face_encodings(image, face_locations)
 
     recognized_names = []
-
     for face_encoding in face_encodings:
-        face_distances = face_recognition.face_distance(known_encodings, face_encoding)
-        best_match_index = np.argmin(face_distances)
-        name = "Не распознан"
-        if face_distances[best_match_index] < 0.5:
-            name = known_names[best_match_index]
-        if name != "Не распознан":
-            recognized_names.append(name)
+        matches = face_recognition.compare_faces(known_encodings, face_encoding)
+        name = "Неизвестно"
+
+        if True in matches:
+            match_index = matches.index(True)
+            name = known_names[match_index]
+        recognized_names.append(name)
 
     return recognized_names

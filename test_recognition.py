@@ -1,64 +1,60 @@
-import face_recognition
 import cv2
 import os
-import numpy as np
+import time
+from face_recognition_core import load_known_faces, recognize_faces
+from recognition.pdf_generator import generate_pdf_report
 
-def load_known_faces(known_faces_dir='known_faces'):
-    known_encodings = []
-    known_names = []
+KNOWN_ENCODINGS, KNOWN_NAMES = load_known_faces("known_faces")
+attendance_log = []
+today_folder = time.strftime('%Y-%m-%d')
+os.makedirs(f"attendance/{today_folder}", exist_ok=True)
 
-    for filename in os.listdir(known_faces_dir):
-        if filename.endswith('.jpg') or filename.endswith('.png'):
-            image_path = os.path.join(known_faces_dir, filename)
-            image = face_recognition.load_image_file(image_path)
-            encodings = face_recognition.face_encodings(image)
-            if encodings:
-                known_encodings.append(encodings[0])
-                known_names.append(os.path.splitext(filename)[0])
+cap = cv2.VideoCapture(0)
 
-    return known_encodings, known_names
+if not cap.isOpened():
+    print("Не удалось открыть камеру")
+    exit()
 
+print("Нажмите 'q' для выхода и генерации PDF-отчета")
 
-def recognize_faces_in_image(image_path, known_encodings, known_names):
-    image = cv2.imread(image_path)
-    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+last_recognition_time = 0
+recognition_interval = 2
 
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
 
-    face_locations = face_recognition.face_locations(rgb_image)
-    face_encodings = face_recognition.face_encodings(rgb_image, face_locations)
+    cv2.imshow('Камера', frame)
 
-    print(f"[INFO] Обнаружено лиц: {len(face_locations)}")
+    current_time = time.time()
+    if current_time - last_recognition_time >= recognition_interval:
+        last_recognition_time = current_time
 
-    recognized_names = []
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-        face_distances = face_recognition.face_distance(known_encodings, face_encoding)
-        best_match_index = np.argmin(face_distances)
-        name = "Unknown"
+        recognized = recognize_faces(rgb_frame, KNOWN_ENCODINGS, KNOWN_NAMES)
 
+        for name in recognized:
+            timestamp = time.strftime('%H:%M:%S')
+            photo_filename = f"{name}_{timestamp}.jpg"
+            photo_path = os.path.join("attendance", today_folder, photo_filename)
+            cv2.imwrite(photo_path, frame)
+            if name not in [entry[0] for entry in attendance_log]:
+                attendance_log.append((name, timestamp, photo_path))
+                print(f"[✓] {name} был распознан в {timestamp}")
 
-        if face_distances[best_match_index] < 0.5:
-            name = known_names[best_match_index]
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-        recognized_names.append(name)
+cap.release()
+cv2.destroyAllWindows()
 
+pdf_filename = f"report_{time.strftime('%Y%m%d_%H%M%S')}.pdf"
+pdf_path = os.path.join("reports", pdf_filename)
+os.makedirs("reports", exist_ok=True)
 
-        cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
-        cv2.putText(image, name, (left, top - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+names_only = [entry[0] for entry in attendance_log]
+generate_pdf_report(names_only, pdf_path)
 
-
-    cv2.imshow("Результат", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    return recognized_names
-
-
-
-if __name__ == "__main__":
-    known_encodings, known_names = load_known_faces()
-    results = recognize_faces_in_image("test-image3.jpg", known_encodings, known_names)
-    print("Распознанные лица:", results)
-
-
+print(f"PDF-отчет создан: {pdf_path}")
