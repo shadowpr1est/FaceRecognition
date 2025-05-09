@@ -1,7 +1,6 @@
 # recognition/face_recognition_core.py
 import face_recognition
 import os
-import numpy as np
 
 def load_known_faces(known_faces_dir='known_faces'):
     known_encodings = []
@@ -19,10 +18,10 @@ def load_known_faces(known_faces_dir='known_faces'):
     return known_encodings, known_names
 
 
-import face_recognition
+def recognize_faces(image_path, known_encodings, known_names):
+    # 🛠 Загрузка изображения из пути
+    image = face_recognition.load_image_file(image_path)
 
-
-def recognize_faces(image, known_encodings, known_names):
     face_locations = face_recognition.face_locations(image)
     face_encodings = face_recognition.face_encodings(image, face_locations)
 
